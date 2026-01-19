@@ -5,7 +5,7 @@ def lambda_handler(event, context):
 
     try:
         ses = boto3.client('ses')
-        data = event.get('body', {})
+        data = json.loads(event.get('body', {}))
         subject = data.get('subject', 'No Subject')
         body = data.get('body', 'No Body Content')
 
