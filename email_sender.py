@@ -2,20 +2,20 @@ import boto3
 import json
 import re
 
-ses = boto3.client('ses')
+SES = boto3.client('ses')
 MAX_SUBJECT_LENGTH = 120
 MAX_BODY_LENGTH = 2000
 
 def lambda_handler(event, context):
     print(event)
     try:
-        if "body" not in event or not event["body"]:
+        if len(event) > 2:
             return {
-                'statusCode': 400,
-                'body': json.dumps("Missing body.")
+                'statusCode': 413,
+                'body': json.dumps("Too many fields.")
             }
 
-        subject = event.get('subject', 'No Subject')
+        subject = event['subject']
         body = event['body']
 
         if len(subject) > MAX_SUBJECT_LENGTH:
@@ -32,7 +32,7 @@ def lambda_handler(event, context):
         subject = sanitize_text(subject)
         body = sanitize_text(body)
 
-        ses.send_email(
+        SES.send_email(
             Source='webform@luka-brown.com',
             Destination={'ToAddresses':['contact@luka-brown.com']},
             Message={
@@ -46,37 +46,37 @@ def lambda_handler(event, context):
             'statusCode': 200,
             'body': json.dumps("Sucessfully sent email.")
         }
-    except ses.exceptions.MessageRejected as e:
+    except SES.exceptions.MessageRejected as e:
         print(json.dumps(f"Email rejected: {str(e)}"))
         return {
             'statusCode': 400,
             'body': json.dumps("Email rejected.")
         }
-    except ses.exceptions.MailFromDomainNotVerifiedException as e:
+    except SES.exceptions.MailFromDomainNotVerifiedException as e:
         print(json.dumps(f"Domain not verified: {str(e)}"))
         return {
             'statusCode': 400,
             'body': json.dumps("Domain not verified.")
         }
-    except ses.exceptions.ConfigurationSetDoesNotExistException as e:
+    except SES.exceptions.ConfigurationSetDoesNotExistException as e:
         print(json.dumps(f"Configuration set does not exist: {str(e)}"))
         return {
             'statusCode': 400,
             'body': json.dumps("Configuration set does not exist.")
         }
-    except ses.exceptions.ClientError as e:
+    except SES.exceptions.ClientError as e:
         print(json.dumps(f"Client error: {str(e)}"))
         return {
             'statusCode': 400,
             'body': json.dumps("Client error.")
         }
-    except ses.exceptions.AccountSendingPausedException as e:
+    except SES.exceptions.AccountSendingPausedException as e:
         print(json.dumps(f"Account sending paused: {str(e)}"))
         return {
             'statusCode': 403,
             'body': json.dumps("Account sending paused.")
         }
-    except ses.exceptions.LimitExceededException as e:
+    except SES.exceptions.LimitExceededException as e:
         print(json.dumps(f"Limit exceeded: {str(e)}"))
         return {
             'statusCode': 429,
