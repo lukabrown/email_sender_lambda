@@ -1,6 +1,7 @@
 import boto3
 import json
 import re
+import os
 
 SES = boto3.client('ses')
 MAX_SUBJECT_LENGTH = 120
@@ -38,7 +39,8 @@ def lambda_handler(event, context):
             Message={
                 'Subject': {'Data': subject},
                 'Body': {'Text': {'Data': body}}
-            }
+            },
+            ConfigurationSetName=os.environ["config_set"]
         )
 
         print(json.dumps("Successfully sent email."))
